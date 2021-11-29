@@ -4,8 +4,10 @@ const dropdownMenu = document.querySelector('.dropdown .menu');
 const dropdownTitle = document.querySelector('.dropdown .title');
 const notFoundNode = document.createElement('span');
 notFoundNode.setAttribute('id', 'not-found');
-notFoundNode.style = 'text-color: red';
-notFoundNode.innerHTML='Not found';
+notFoundNode.innerHTML = 'Not found';
+const loadingNode = document.createElement('span');
+loadingNode.setAttribute('id', 'loading');
+loadingNode.innerHTML = 'Loading...';
 
 let contestants = [];
 
@@ -31,33 +33,22 @@ function handleOptionSelected(e) {
     titleElem.textContent = newValue;
     titleElem.appendChild(icon);
 
-    //trigger custom event
     document.querySelector('.dropdown .title').dispatchEvent(new Event('change'));
-    //setTimeout is used so transition is properly shown
     setTimeout(() => toggleClass(icon, 'rotate-90', 0));
 }
 
 function handleTitleChange(e) {
     const result = document.getElementById('result');
     result.innerHTML = 'The result is: ' + e.target.textContent;
-    const constestantDetails = contestants.find(function(contestant) {
+    const constestantDetails = contestants.find(function (contestant) {
         const conestantDetails = `${contestant.inie} ${contestant.nazwisko}`
-         return conestantDetails.trim() === e.target.textContent.trim();
-        })
+        return conestantDetails.trim() === e.target.textContent.trim();
+    })
     result.innerHTML += JSON.stringify(constestantDetails);
 }
 
-
-
 dropdownTitle.addEventListener('click', toggleMenuDisplay);
 document.querySelector('.dropdown .title').addEventListener('change', handleTitleChange);
-
-function httpGetAsync(theUrl, callback) {
-    var xmlHttp = new XMLHttpRequest();
-
-    xmlHttp.open("GET", theUrl, true); // true for asynchronous 
-    xmlHttp.send(null);
-}
 
 function get(url) {
     return window.fetch(url, {
@@ -76,14 +67,26 @@ function createDropdownOption(index, content) {
     dropdownMenu.appendChild(optionNode)
 }
 
+function displayLoadingInformation() {
+    selectCountryTextbox.parentNode.appendChild(loadingNode)
+}
+
+function hideLoadingInformation() {
+    selectCountryTextbox.parentNode.removeChild(loadingNode)
+}
+
+function fetchContestantsForCountry(country) {
+    displayLoadingInformation();
+    const url = `https://functionapp120211128163325.azurewebsites.net/api/podajzawodnikow?kraj=${country}&fbclid=IwAR21RPsmdGwA6rQ3-finsH0vFvHwH8paMIgm03bzPDq_g9WFJYKOrYh9_sw`;
+    return get(url);
+}
+
 function onSelectCountryCheckboxChanged(e) {
-    const url = `https://functionapp120211128163325.azurewebsites.net/api/podajzawodnikow?kraj=${e.target.value}&fbclid=IwAR21RPsmdGwA6rQ3-finsH0vFvHwH8paMIgm03bzPDq_g9WFJYKOrYh9_sw`;
-    get(url).then(function (response) {
-        dropdownMenu.innerHTML='';
+    fetchContestantsForCountry(e.target.value).then(function (response) {
+        dropdownMenu.innerHTML = '';
         if (response.length === 0) {
             selectCountryTextbox.parentNode.appendChild(notFoundNode)
-        }
-        else{
+        } else {
             selectCountryTextbox.parentNode.removeChild(notFoundNode)
         }
         contestants = response;
@@ -91,6 +94,7 @@ function onSelectCountryCheckboxChanged(e) {
             createDropdownOption(index, `${element.inie} ${element.nazwisko}`)
         });
     })
+    .finally(function() { hideLoadingInformation()})
 }
 selectCountryTextbox.addEventListener('input', onSelectCountryCheckboxChanged)
 
