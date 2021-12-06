@@ -92,6 +92,7 @@ function fetchContestantsForCountry(country) {
 }
 
 function populateTable(contenstans) {
+    contestantsTable.innerHTML = '';
     contenstans.forEach(function(contestant) {
         const dataRow = document.createElement('tr');
         Object.values(contestant).forEach(function(value) {
