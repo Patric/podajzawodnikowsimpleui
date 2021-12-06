@@ -8,6 +8,7 @@ notFoundNode.innerHTML = 'Not found';
 const loadingNode = document.createElement('span');
 loadingNode.setAttribute('id', 'loading');
 loadingNode.innerHTML = 'Loading...';
+const contestantsTable = document.getElementById('contestants-table');
 
 let contestants = [];
 
@@ -81,6 +82,18 @@ function fetchContestantsForCountry(country) {
     return get(url);
 }
 
+function populateTable(contenstans) {
+    contenstans.forEach(function(contestant) {
+        const dataRow = document.createElement('tr');
+        Object.values(contestant).forEach(function(value) {
+            const td = document.createElement('td');
+            td.innerHTML = value;
+            dataRow.appendChild(td);
+        })
+        contestantsTable.appendChild(dataRow)
+    })
+}
+
 function onSelectCountryCheckboxChanged(e) {
     fetchContestantsForCountry(e.target.value).then(function (response) {
         dropdownMenu.innerHTML = '';
@@ -90,11 +103,14 @@ function onSelectCountryCheckboxChanged(e) {
             selectCountryTextbox.parentNode.removeChild(notFoundNode)
         }
         contestants = response;
+        populateTable(response);
         response.forEach(function (element, index) {
             createDropdownOption(index, `${element.inie} ${element.nazwisko}`)
         });
     })
-    .finally(function() { hideLoadingInformation()})
+    .finally(function() { 
+        hideLoadingInformation();
+    })
 }
 selectCountryTextbox.addEventListener('input', onSelectCountryCheckboxChanged)
 

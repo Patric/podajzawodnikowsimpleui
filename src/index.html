@@ -13,16 +13,32 @@
             <span class="title">Select country:</span>
             <input class="select-country-textbox" placeholder="Country name" type='text'>
         </div>
-        <div class='dropdown'>
+        <table>
+            <thead>
+                <tr>
+                    <th>id_trenera</th>
+                    <th>imie</th>
+                    <th>nazwisko</th>
+                    <th>kraj</th>
+                    <th>data_ur</th>
+                    <th>wzrost</th>
+                    <th>waga</th>
+                    <!-- <th>zdjęcie</th> -->
+                </tr>
+            </thead>
+            <tbody id="contestants-table">
+            </tbody>
+        </table>
+        <div class='dropdown hidden'>
             <div class='title pointerCursor'>Select an option <i class="fa fa-angle-right"></i></div>
             <div class='menu pointerCursor hide'>
             </div>
-
+            <span id='result'>The result is: </span>
         </div>
-        <span id='result'>The result is: </span>
+        </div>
     </div>
 
- <script type="text/javascript" src="index.js"></script>
+    <script type="text/javascript" src="index.js"></script>
 </body>
 
 </html>
