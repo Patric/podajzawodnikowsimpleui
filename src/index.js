@@ -59,6 +59,15 @@ function get(url) {
     })
 };
 
+function post(url, bodyData) {
+    return window.fetch(url, {
+        method: "POST",
+        body: bodyData
+    }).then(function (response) {
+        return response.json();
+    })
+};
+
 function createDropdownOption(index, content) {
     const optionNode = document.createElement('div');
     optionNode.setAttribute('class', 'option');
@@ -90,14 +99,31 @@ function populateTable(contenstans) {
             td.innerHTML = value;
             dataRow.appendChild(td);
         })
-        const inputFile = document.createElement("input");
-        Object.assign(inputFile, {
+        const inputFileElem = document.createElement("input");
+        Object.assign(inputFileElem, {
             type: 'file',
             accept: 'image/png, image/jpeg',
             multiple: "false"
         });
-        dataRow.appendChild(inputFile);
+        inputFileElem.addEventListener('input', updateImage, false);
+        const td = document.createElement('td');
+        td.appendChild(inputFileElem);
+        dataRow.appendChild(td);
         contestantsTable.appendChild(dataRow)
+    })
+}
+
+function updateImage(e) {
+    var formData = new FormData();
+    formData.append("fileToUpload", this.files[0]);
+    this.setAttribute('src', URL.createObjectURL(this.files[0]))
+    const img = document.createElement('img');
+    img.setAttribute('src', URL.createObjectURL(this.files[0]));
+    this.after(img);
+    post('https://photouploadpw.azurewebsites.net/api/PhotoUpload', formData).then(function(response) {
+        console.log(response)
+    }).finally(function() {
+      
     })
 }
 
