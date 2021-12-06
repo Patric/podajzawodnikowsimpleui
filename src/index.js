@@ -90,6 +90,13 @@ function populateTable(contenstans) {
             td.innerHTML = value;
             dataRow.appendChild(td);
         })
+        const inputFile = document.createElement("input");
+        Object.assign(inputFile, {
+            type: 'file',
+            accept: 'image/png, image/jpeg',
+            multiple: "false"
+        });
+        dataRow.appendChild(inputFile);
         contestantsTable.appendChild(dataRow)
     })
 }
