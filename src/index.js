@@ -82,7 +82,8 @@ function displayLoadingInformation() {
 }
 
 function hideLoadingInformation() {
-    selectCountryTextbox.parentNode.removeChild(loadingNode)
+    selectCountryTextbox.parentNode.contains(loadingNode) 
+    && selectCountryTextbox.parentNode.removeChild(loadingNode)
 }
 
 function fetchContestantsForCountry(country) {
@@ -134,6 +135,7 @@ function onSelectCountryCheckboxChanged(e) {
         if (response.length === 0) {
             selectCountryTextbox.parentNode.appendChild(notFoundNode)
         } else {
+            selectCountryTextbox.parentNode.contains(notFoundNode) && 
             selectCountryTextbox.parentNode.removeChild(notFoundNode)
         }
         contestants = response;
