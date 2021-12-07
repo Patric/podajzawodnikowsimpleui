@@ -82,8 +82,8 @@ function displayLoadingInformation() {
 }
 
 function hideLoadingInformation() {
-    selectCountryTextbox.parentNode.contains(loadingNode) 
-    && selectCountryTextbox.parentNode.removeChild(loadingNode)
+    selectCountryTextbox.parentNode.contains(loadingNode) &&
+        selectCountryTextbox.parentNode.removeChild(loadingNode)
 }
 
 function fetchContestantsForCountry(country) {
@@ -92,61 +92,143 @@ function fetchContestantsForCountry(country) {
     return get(url);
 }
 
-function populateTable(contenstans) {
-    contestantsTable.innerHTML = '';
-    contenstans.forEach(function(contestant) {
-        const dataRow = document.createElement('tr');
-        Object.values(contestant).forEach(function(value) {
-            const td = document.createElement('td');
-            td.innerHTML = value;
-            dataRow.appendChild(td);
-        })
-        const inputFileElem = document.createElement("input");
-        Object.assign(inputFileElem, {
+function getInputNode(contestantId) {
+    const inputFileNode = document.createElement("input");
+        Object.assign(inputFileNode, {
             type: 'file',
             accept: 'image/png, image/jpeg',
-            multiple: "false"
+            multiple: "false",
+            id: contestantId 
         });
-        inputFileElem.addEventListener('input', updateImage, false);
-        const td = document.createElement('td');
-        td.appendChild(inputFileElem);
-        dataRow.appendChild(td);
-        contestantsTable.appendChild(dataRow)
+        inputFileNode.addEventListener('input', updateImage, false);
+        return inputFileNode;
+}
+
+class DataRow {
+    static toDataRowNode(arrayOfValues) {
+        const dataRow = document.createElement('tr');
+        arrayOfValues.forEach(function(element) {
+            const td = document.createElement('td');
+            td.innerHTML = element;
+            dataRow.appendChild(td);
+        });
+        return dataRow;
+    }
+}
+
+class Spodash {
+    static isStringDefined(input) {
+        return input !== '' && input !== undefined && input !== null;
+    }
+}
+
+class Contestant {
+    constructor(id_zawodnika,
+        data_ur,
+        id_trenera,
+        imie, 
+        kraj,
+        nazwisko,
+        waga,
+        wzrost,
+        zdjecie_uuid) {
+            this.id_zawodnika = id_zawodnika;
+            this.data_ur = data_ur;
+            this.id_trenera = id_trenera;
+            this.imie = imie;
+            this.kraj = kraj;
+            this.nazwisko = nazwisko;
+            this.waga = waga;
+            this.wzrost = wzrost;
+            this.zdjecie_uuid = zdjecie_uuid;
+        }
+
+        getDataRowNode() {
+            const dataRow = DataRow.toDataRowNode([
+                this.id_trenera,
+                this.imie, 
+                this.nazwisko,
+                this.kraj,
+                this.data_ur,
+                this.wzrost,
+                this.waga]);
+
+            const td = document.createElement('td');
+            if (Spodash.isStringDefined(this.zdjecie_uuid)) {
+                const imgNode = getImageNode(`https://labpwstorage.blob.core.windows.net/photos/${this.zdjecie_uuid}`, this.zdjecie_uuid);
+                td.appendChild(imgNode);
+            }
+                const inputFileElem = getInputNode(this.id_zawodnika);
+                td.appendChild(inputFileElem);
+                dataRow.appendChild(td);
+            return dataRow;
+        }
+
+}
+
+function populateTable(contenstans) {
+    contestantsTable.innerHTML = '';
+    contenstans.forEach(function (contestant) {
+        const contestantDataRowNode = new Contestant(contestant.id_zawodnika,
+            contestant.data_ur,
+            contestant.id_trenera,
+            contestant.inie, 
+            contestant.kraj,
+            contestant.nazwisko,
+            contestant.waga,
+            contestant.wzrost,
+            contestant.zdjecie_uuid).getDataRowNode();
+        contestantsTable.appendChild(contestantDataRowNode)
     })
 }
+
+function getImageNode(url, id = 'image') {
+    const img = document.createElement('img');
+    img.setAttribute('src', url);
+    img.setAttribute('id', id);
+    return img;
+}
+
 
 function updateImage(e) {
     var formData = new FormData();
     formData.append("fileToUpload", this.files[0]);
-    this.setAttribute('src', URL.createObjectURL(this.files[0]))
-    const img = document.createElement('img');
-    img.setAttribute('src', URL.createObjectURL(this.files[0]));
-    this.after(img);
-    post('https://photouploadpw.azurewebsites.net/api/PhotoUpload', formData).then(function(response) {
-        console.log(response)
-    }).finally(function() {
-      
+    let imgFound = false;
+    for(childNode of this.parentNode.childNodes) {
+        if(childNode.tagName === 'IMG'){
+            childNode.setAttribute('src', URL.createObjectURL(this.files[0]));
+            imgFound = true;
+        }
+    }
+    if (!imgFound) {
+        const img = getImageNode(URL.createObjectURL(this.files[0]));
+        this.before(img);
+    }
+  
+    post(`https://photouploadpw.azurewebsites.net/api/PhotoUpload?zawodnik=${this.id}`, formData).then(function (response) {
+    }).finally(function () {
+
     })
 }
 
 function onSelectCountryCheckboxChanged(e) {
     fetchContestantsForCountry(e.target.value).then(function (response) {
-        dropdownMenu.innerHTML = '';
-        if (response.length === 0) {
-            selectCountryTextbox.parentNode.appendChild(notFoundNode)
-        } else {
-            selectCountryTextbox.parentNode.contains(notFoundNode) && 
-            selectCountryTextbox.parentNode.removeChild(notFoundNode)
-        }
-        contestants = response;
-        populateTable(response);
-        response.forEach(function (element, index) {
-            createDropdownOption(index, `${element.inie} ${element.nazwisko}`)
-        });
-    })
-    .finally(function() { 
-        hideLoadingInformation();
-    })
+            dropdownMenu.innerHTML = '';
+            if (response.length === 0) {
+                selectCountryTextbox.parentNode.appendChild(notFoundNode)
+            } else {
+                selectCountryTextbox.parentNode.contains(notFoundNode) &&
+                    selectCountryTextbox.parentNode.removeChild(notFoundNode)
+            }
+            contestants = response;
+            populateTable(response);
+            response.forEach(function (element, index) {
+                createDropdownOption(index, `${element.inie} ${element.nazwisko}`)
+            });
+        })
+        .finally(function () {
+            hideLoadingInformation();
+        })
 }
 selectCountryTextbox.addEventListener('input', onSelectCountryCheckboxChanged)
 
